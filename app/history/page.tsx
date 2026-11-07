@@ -41,6 +41,13 @@ export default function HistoryPage() {
     setSelectedRun(null);
   };
 
+  const handleRunUpdated = (updatedRun: RunState) => {
+    setSelectedRun(updatedRun);
+    setHistoryRuns((prev) =>
+      prev.map((r) => (r.run_id === updatedRun.run_id ? updatedRun : r))
+    );
+  };
+
   return (
     <div className="min-h-screen bg-zinc-50/70 text-zinc-900 dark:bg-black dark:text-zinc-100 font-sans pb-24">
       {/* Top Navigation Bar */}
@@ -118,6 +125,7 @@ export default function HistoryPage() {
         run={selectedRun}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
+        onRunUpdated={handleRunUpdated}
       />
     </div>
   );

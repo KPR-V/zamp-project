@@ -64,17 +64,34 @@ Auto-Onboarding Gateway
     ? `[Action Required] Vendor Onboarding Submission - ${vendor.legal_company_name}`
     : `[Under Review] Vendor Onboarding Status Update - ${vendor.legal_company_name}`;
 
-  // Actually dispatch the email via Resend
-  const sendResult = await sendVendorEmail(vendor.contact_email, subject, emailDraft);
+  let sendResult: { success: boolean; messageId?: string; error?: string };
 
-  const resultMessage = sendResult.success
+  if (status === 'Pending') {
+    // When an application requires human review, hold email as draft
+    // Compliance reviewer can edit, approve, or dispatch from Inspect Modal
+    sendResult = {
+      success: false,
+      error: 'Held as draft awaiting human compliance review',
+    };
+  } else {
+    // For Rejected, send immediate actionable notification
+    sendResult = await sendVendorEmail(vendor.contact_email, subject, emailDraft);
+  }
+
+  const resultMessage = status === 'Pending'
+    ? 'Notification draft generated and queued for human compliance review.'
+    : sendResult.success
     ? `Email successfully generated and sent to ${vendor.contact_email} (Resend ID: ${sendResult.messageId}).`
     : `Email draft generated. Delivery failed or simulated (${sendResult.error || 'Check Resend configuration'}).`;
+
+  const label = status === 'Pending'
+    ? 'Automated Vendor Communication (Draft Queued for Review)'
+    : `Automated Vendor Communication (${sendResult.success ? 'Email Sent' : 'Email Drafted'})`;
 
   return {
     step: {
       name: 'step_d',
-      label: `Automated Vendor Communication (${sendResult.success ? 'Email Sent' : 'Email Drafted'})`,
+      label,
       status: 'passed',
       result: resultMessage,
       reasoning: emailDraft,

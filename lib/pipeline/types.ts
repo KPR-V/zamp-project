@@ -1,6 +1,6 @@
 export type VendorStatus = 'Processing' | 'Approved' | 'Pending' | 'Rejected';
 
-export type StepName = 'step_a' | 'step_b' | 'step_c' | 'step_d';
+export type StepName = 'step_a' | 'step_b' | 'step_c' | 'step_d' | 'step_human_review';
 
 export interface VendorPayload {
   legal_company_name: string;   // e.g. "Infosys Technologies Private Limited"
