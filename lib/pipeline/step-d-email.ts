@@ -10,6 +10,7 @@ export async function runStepD(
   step: PipelineStep;
   emailDraft: string;
   emailSent: boolean;
+  emailError?: string;
   modelUsed: string;
 }> {
   const issuesList = issues.length > 0
@@ -82,11 +83,13 @@ Auto-Onboarding Gateway
     ? 'Notification draft generated and queued for human compliance review.'
     : sendResult.success
     ? `Email successfully generated and sent to ${vendor.contact_email} (Resend ID: ${sendResult.messageId}).`
-    : `Email draft generated. Delivery failed or simulated (${sendResult.error || 'Check Resend configuration'}).`;
+    : `Direct email dispatch attempted to ${vendor.contact_email}, but delivery failed: ${sendResult.error || 'Check Resend configuration'}`;
 
   const label = status === 'Pending'
     ? 'Automated Vendor Communication (Draft Queued for Review)'
-    : `Automated Vendor Communication (${sendResult.success ? 'Email Sent' : 'Email Drafted'})`;
+    : sendResult.success
+    ? 'Automated Vendor Communication (Email Sent)'
+    : 'Automated Vendor Communication (Delivery Failed)';
 
   return {
     step: {
@@ -99,6 +102,7 @@ Auto-Onboarding Gateway
     },
     emailDraft,
     emailSent: sendResult.success,
+    emailError: sendResult.success ? undefined : sendResult.error,
     modelUsed,
   };
 }

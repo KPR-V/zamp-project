@@ -141,9 +141,18 @@ export function RunHistory({
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                           Sent ({run.vendor?.contact_email?.split('@')[0]}@...)
                         </span>
+                      ) : run.status === 'Pending' ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 dark:text-amber-400">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                          Draft (Awaiting Review)
+                        </span>
                       ) : run.email_draft ? (
-                        <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                          Drafted (Not Sent)
+                        <span
+                          className="inline-flex items-center gap-1 text-[11px] font-medium text-rose-700 dark:text-rose-400"
+                          title={run.email_error || 'Email dispatch attempted, but blocked or rejected by provider.'}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                          Delivery Failed / Blocked
                         </span>
                       ) : (
                         <span className="text-[11px] text-zinc-400 dark:text-zinc-500">

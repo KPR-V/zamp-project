@@ -261,14 +261,19 @@ export function RunDetailsModal({ run, isOpen, onClose, onRunUpdated }: RunDetai
 
                 <div className="flex items-center gap-2">
                   {currentRun.email_sent ? (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-100/80 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-100/80 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-full">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                       Dispatched via Resend
                     </span>
-                  ) : (
+                  ) : currentRun.status === 'Pending' ? (
                     <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded-full">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                       Draft (Held for Review)
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 px-2 py-0.5 rounded-full">
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                      Delivery Blocked / Failed
                     </span>
                   )}
 
@@ -282,6 +287,19 @@ export function RunDetailsModal({ run, isOpen, onClose, onRunUpdated }: RunDetai
                   )}
                 </div>
               </div>
+
+              {/* Delivery Failure Notice if Rejected & Not Sent */}
+              {!currentRun.email_sent && currentRun.status === 'Rejected' && (
+                <div className="p-3 rounded-lg border border-rose-200 bg-rose-50/70 text-rose-900 text-xs dark:border-rose-900/60 dark:bg-rose-950/50 dark:text-rose-200 space-y-1">
+                  <div className="font-semibold flex items-center gap-1.5 text-[11px]">
+                    <span>⚠️ Email Dispatch Blocked / Failed</span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed text-rose-800 dark:text-rose-300">
+                    {currentRun.email_error ||
+                      'The system attempted to send this rejection notice directly to the vendor, but Resend rejected delivery. In free testing mode, Resend only delivers to the account owner email unless a domain is verified.'}
+                  </p>
+                </div>
+              )}
 
               {/* Draft Body: Editable Textarea vs Read-Only Code Block */}
               {isEditingDraft ? (

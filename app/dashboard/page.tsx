@@ -286,12 +286,30 @@ export default function DashboardPage() {
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                       Dispatched to {state.vendor.contact_email}
                     </span>
+                  ) : state.status === 'Pending' ? (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 px-2.5 py-0.5 rounded-full">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                      Draft (Held for Human Review)
+                    </span>
                   ) : (
-                    <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
-                      Draft Generated
+                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 px-2.5 py-0.5 rounded-full">
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                      Delivery Blocked / Failed
                     </span>
                   )}
                 </div>
+
+                {!state.email_sent && state.status === 'Rejected' && (
+                  <div className="mb-3 p-3 rounded-lg border border-rose-200 bg-rose-50/70 text-rose-900 text-xs dark:border-rose-900/60 dark:bg-rose-950/50 dark:text-rose-200 space-y-1">
+                    <div className="font-semibold flex items-center gap-1.5 text-[11px]">
+                      <span>⚠️ Email Delivery Notice</span>
+                    </div>
+                    <p className="text-[11px] leading-relaxed text-rose-800 dark:text-rose-300">
+                      {state.email_error ||
+                        'The system attempted to send this rejection notice directly to the vendor, but Resend rejected delivery. In free testing mode, Resend only delivers to the account owner email unless a domain is verified.'}
+                    </p>
+                  </div>
+                )}
 
                 <div className="text-xs font-mono bg-white dark:bg-zinc-900 p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 whitespace-pre-wrap leading-relaxed">
                   {state.email_draft}

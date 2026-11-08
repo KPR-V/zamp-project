@@ -91,6 +91,7 @@ export async function POST(request: NextRequest) {
       state.steps[state.steps.length - 1] = stepDResult.step;
       state.email_draft = stepDResult.emailDraft;
       state.email_sent = stepDResult.emailSent;
+      state.email_error = stepDResult.emailError;
       await persistState(run_id, state);
 
       return Response.json({ run_id, status: 'Rejected' }, { status: 200 });
@@ -173,6 +174,7 @@ export async function POST(request: NextRequest) {
     state.steps[state.steps.length - 1] = stepDResult.step;
     state.email_draft = stepDResult.emailDraft;
     state.email_sent = stepDResult.emailSent;
+    state.email_error = stepDResult.emailError;
     await persistState(run_id, state);
 
     return Response.json({ run_id, status: state.status }, { status: 200 });

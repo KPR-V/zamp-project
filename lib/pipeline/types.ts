@@ -28,6 +28,7 @@ export interface RunState {
   steps: PipelineStep[];
   email_draft?: string;         // Body of email that was actually sent
   email_sent?: boolean;         // Whether Resend delivery succeeded
+  email_error?: string;        // Delivery error details if email failed or was blocked by Resend
   created_at: string;
   updated_at: string;
 }
