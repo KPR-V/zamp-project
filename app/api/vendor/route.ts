@@ -126,9 +126,27 @@ export async function POST(request: NextRequest) {
 
     if (stepBResult.autoApproved) {
       // Fast Path: Similarity >= 90% -> Auto-Approved!
-      // Bypasses LLM API calls completely to save compute & time
       state.status = 'Approved';
       await persistState(run_id, state);
+
+      // STEP D: Send Formal Congratulations Approval Email via Resend
+      const stepDRunning: PipelineStep = {
+        name: 'step_d',
+        label: 'Automated Vendor Communication',
+        status: 'running',
+        result: 'Generating formal congratulations email and dispatching approval confirmation...',
+        timestamp: new Date().toISOString(),
+      };
+      state.steps.push(stepDRunning);
+      await persistState(run_id, state);
+
+      const stepDResult = await runStepD(vendor, 'Approved', []);
+      state.steps[state.steps.length - 1] = stepDResult.step;
+      state.email_draft = stepDResult.emailDraft;
+      state.email_sent = stepDResult.emailSent;
+      state.email_error = stepDResult.emailError;
+      await persistState(run_id, state);
+
       return Response.json({ run_id, status: 'Approved' }, { status: 200 });
     }
 

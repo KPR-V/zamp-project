@@ -139,7 +139,7 @@ export function RunHistory({
                       {run.email_sent ? (
                         <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                          Sent ({run.vendor?.contact_email?.split('@')[0]}@...)
+                          {run.status === 'Approved' ? 'Approval Sent' : 'Notice Sent'} ({run.vendor?.contact_email?.split('@')[0]}@...)
                         </span>
                       ) : run.status === 'Pending' ? (
                         <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 dark:text-amber-400">

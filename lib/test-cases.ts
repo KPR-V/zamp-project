@@ -15,7 +15,7 @@ export const TEST_CASES: Record<string, TestCase> = {
     name: '1. Happy Path (Auto-Approved)',
     description: 'Clean data, valid 15-digit GSTIN, and trade name matches legal entity (>90%).',
     expectedStatus: 'Approved',
-    expectedBehavior: 'Bypasses LLM and Auto-Approves in < 1 second. No email sent.',
+    expectedBehavior: 'Bypasses LLM and Auto-Approves in < 1 second. Dispatches formal congratulations approval email via Resend.',
     payload: {
       legal_company_name: 'Meridian Softech Private Limited',
       dba_name: 'Meridian Softech',

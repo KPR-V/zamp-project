@@ -299,14 +299,14 @@ export default function DashboardPage() {
                   )}
                 </div>
 
-                {!state.email_sent && state.status === 'Rejected' && (
+                {!state.email_sent && (state.status === 'Rejected' || state.status === 'Approved') && (
                   <div className="mb-3 p-3 rounded-lg border border-rose-200 bg-rose-50/70 text-rose-900 text-xs dark:border-rose-900/60 dark:bg-rose-950/50 dark:text-rose-200 space-y-1">
                     <div className="font-semibold flex items-center gap-1.5 text-[11px]">
                       <span>⚠️ Email Delivery Notice</span>
                     </div>
                     <p className="text-[11px] leading-relaxed text-rose-800 dark:text-rose-300">
                       {state.email_error ||
-                        'The system attempted to send this rejection notice directly to the vendor, but Resend rejected delivery. In free testing mode, Resend only delivers to the account owner email unless a domain is verified.'}
+                        'The system attempted to send this notification directly to the vendor, but Resend rejected delivery. In free testing mode, Resend only delivers to the account owner email unless a domain is verified.'}
                     </p>
                   </div>
                 )}

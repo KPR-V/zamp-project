@@ -76,7 +76,8 @@ sequenceDiagram
     else Deterministic Checks Pass
         Note over API: Step B: Dice's String Similarity
         alt Dice Similarity >= 0.90 (Auto-Approve)
-            API->>API: Mark Status = "Approved" (Bypasses LLM & Email)
+            API->>API: Mark Status = "Approved"
+            API->>Resend: Step D: Dispatch Formal Congratulations Approval Email
             API->>Redis: Update Final RunState
             API->>SSE: Push `run_complete` Event
         else Dice Similarity < 0.90 (Ambiguous DBA)
@@ -321,7 +322,7 @@ The following test matrix demonstrates how the platform routes divergent vendor 
 
 | Scenario ID | Vendor Legal Entity | Trade Name (DBA) | Statutory GSTIN | Bank Account Number | Step A (Regex) | Step B (Dice) | Step C (LLM) | Final Status | Email Behavior | Total Tokens Consumed | Execution Latency |
 |---|---|---|---|---|:---:|:---:|:---:|:---:|---|:---:|:---:|
-| **TC-01** (Happy Path) | *Meridian Softech Private Limited* | Meridian Softech | `27AABCM1234D1Z5` | *#50100432109876* | **PASS** | **1.00** $(\ge 0.90)$ | *Bypassed* | **Approved** | Skipped | **0** | **$4\text{ ms}$** |
+| **TC-01** (Happy Path) | *Meridian Softech Private Limited* | Meridian Softech | `27AABCM1234D1Z5` | *#50100432109876* | **PASS** | **1.00** $(\ge 0.90)$ | *Bypassed* | **Approved** | Formal Congratulations Sent | $\sim 280$ | $\sim 1.2\text{ s}$ |
 | **TC-02** (DBA Mismatch) | *Global Freight Solutions LLP* | GFS Logistics | `29AABCG5678E1Z3` | *#001105002341* | **PASS** | **0.17** $(< 0.90)$ | **PASS** (Conf: 85%) | **Pending** | Draft Held for Review | $\sim 380$ | $\sim 1.8\text{ s}$ |
 | **TC-03** (GSTIN Typo) | *Sunrise Imports and Exports Pvt Ltd* | Sunrise Imports | `07AABCS12345Z5` (14 chars) | *#3089101002345* | **FAIL** | *Bypassed* | *Bypassed* | **Rejected** | Instant Rejection Email | $\sim 190$ | $\sim 1.1\text{ s}$ |
 | **TC-04** (Impersonation) | *Apex Industrial Components Ltd* | Apex | `33AABCA9999F1Z2` | *#987654321000* | **PASS** | **0.00** $(< 0.90)$ | **FAIL** (Conf: 10%) | **Rejected** | Instant Discrepancy Email | $\sim 420$ | $\sim 2.1\text{ s}$ |

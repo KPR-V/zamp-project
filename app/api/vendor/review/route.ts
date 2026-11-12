@@ -96,14 +96,26 @@ export async function POST(request: NextRequest) {
       };
       state.steps.push(approvalStep);
 
-      // Optionally draft an approval confirmation email
-      state.email_draft = `Dear ${state.vendor.legal_company_name} Accounts Team,\n\nWe are pleased to inform you that your vendor onboarding application has been reviewed and officially Approved by our compliance team.\n\nYour banking credentials and trade name (${state.vendor.dba_name}) have been verified.\n\nRegards,\nVendor Compliance Team`;
-      state.email_sent = false; // Left as draft ready to send, or reviewer can click send
+      // Formal congratulations email draft
+      const formalApprovalEmail =
+        state.email_draft && !state.email_draft.includes('under manual review')
+          ? state.email_draft
+          : `Dear ${state.vendor.legal_company_name} Accounts Team,\n\nCongratulations! We are pleased to inform you that your vendor onboarding application has been reviewed and officially Approved by our compliance team.\n\nYour banking credentials and trade name (${state.vendor.dba_name}) have been verified for automated commercial payouts.\n\nRegards,\nVendor Compliance & Accounts Payable Team\nAuto-Onboarding Gateway`;
+
+      state.email_draft = formalApprovalEmail;
+
+      // Dispatch formal congratulations email via Resend
+      const subject = `[Approved] Congratulations! Vendor Onboarding Approved - ${state.vendor.legal_company_name}`;
+      const sendResult = await sendVendorEmail(state.vendor.contact_email, subject, formalApprovalEmail);
+      state.email_sent = sendResult.success;
+      if (!sendResult.success) {
+        state.email_error = sendResult.error;
+      }
 
       await redis.set(`run:${run_id}`, JSON.stringify(state), { ex: 3600 });
       emitVendorEvent('run_complete', state, false);
 
-      return Response.json({ success: true, run: state });
+      return Response.json({ success: true, run: state, emailSent: sendResult.success });
     }
 
     // 4. Action: Human Compliance Rejection

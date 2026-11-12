@@ -288,15 +288,15 @@ export function RunDetailsModal({ run, isOpen, onClose, onRunUpdated }: RunDetai
                 </div>
               </div>
 
-              {/* Delivery Failure Notice if Rejected & Not Sent */}
-              {!currentRun.email_sent && currentRun.status === 'Rejected' && (
+              {/* Delivery Failure Notice if Rejected or Approved & Not Sent */}
+              {!currentRun.email_sent && (currentRun.status === 'Rejected' || currentRun.status === 'Approved') && (
                 <div className="p-3 rounded-lg border border-rose-200 bg-rose-50/70 text-rose-900 text-xs dark:border-rose-900/60 dark:bg-rose-950/50 dark:text-rose-200 space-y-1">
                   <div className="font-semibold flex items-center gap-1.5 text-[11px]">
                     <span>⚠️ Email Dispatch Blocked / Failed</span>
                   </div>
                   <p className="text-[11px] leading-relaxed text-rose-800 dark:text-rose-300">
                     {currentRun.email_error ||
-                      'The system attempted to send this rejection notice directly to the vendor, but Resend rejected delivery. In free testing mode, Resend only delivers to the account owner email unless a domain is verified.'}
+                      'The system attempted to send this notification directly to the vendor, but Resend rejected delivery. In free testing mode, Resend only delivers to the account owner email unless a domain is verified.'}
                   </p>
                 </div>
               )}
