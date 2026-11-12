@@ -13,7 +13,7 @@ export const TEST_CASES: Record<string, TestCase> = {
   happy_path: {
     id: 'happy_path',
     name: '1. Happy Path (Auto-Approved)',
-    description: 'Clean data, valid 15-digit GSTIN, and Bank Name matches Legal Name (>90%).',
+    description: 'Clean data, valid 15-digit GSTIN, and trade name matches legal entity (>90%).',
     expectedStatus: 'Approved',
     expectedBehavior: 'Bypasses LLM and Auto-Approves in < 1 second. No email sent.',
     payload: {
@@ -21,6 +21,7 @@ export const TEST_CASES: Record<string, TestCase> = {
       dba_name: 'Meridian Softech',
       gstin: '27AABCM1234D1Z5',
       bank_name: 'HDFC Bank',
+      bank_account_number: '50100432109876',
       bank_account_name: 'Meridian Softech Private Limited',
       state_code: 'MH',
       contact_email: 'decline-sharpness96@bravealias.com',
@@ -29,7 +30,7 @@ export const TEST_CASES: Record<string, TestCase> = {
   dba_mismatch: {
     id: 'dba_mismatch',
     name: '2. DBA Mismatch (LLM Verification → Pending Review)',
-    description: 'Legal name and Bank account name differ (GFS vs Global Freight Solutions).',
+    description: 'Legal name and DBA trade name differ (GFS Logistics vs Global Freight Solutions).',
     expectedStatus: 'Pending',
     expectedBehavior: 'Triggers NVIDIA NIM LLM. Verifies DBA acronym consistency. Sends real email notification.',
     payload: {
@@ -37,6 +38,7 @@ export const TEST_CASES: Record<string, TestCase> = {
       dba_name: 'GFS Logistics',
       gstin: '29AABCG5678E1Z3',
       bank_name: 'ICICI Bank',
+      bank_account_number: '001105002341',
       bank_account_name: 'GFS Logistics',
       state_code: 'KA',
       contact_email: 'decline-sharpness96@bravealias.com',
@@ -53,6 +55,7 @@ export const TEST_CASES: Record<string, TestCase> = {
       dba_name: 'Sunrise Imports',
       gstin: '07AABCS12345Z5',
       bank_name: 'State Bank of India',
+      bank_account_number: '3089101002345',
       bank_account_name: 'Sunrise Imports and Exports Pvt Ltd',
       state_code: 'DL',
       contact_email: 'decline-sharpness96@bravealias.com',

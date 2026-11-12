@@ -7,7 +7,8 @@ export interface VendorPayload {
   dba_name: string;             // e.g. "Infosys" (Doing Business As)
   gstin: string;                // 15-char GSTIN, e.g. "27AAACI1681G1ZK"
   bank_name: string;            // e.g. "HDFC Bank", "SBI", "ICICI Bank"
-  bank_account_name: string;    // Name on the bank account
+  bank_account_number: string;  // Bank Account Number (from Google Form)
+  bank_account_name?: string;   // Optional fallback / alias
   state_code: string;           // 2-digit Indian state code, e.g. "MH", "KA", "DL"
   contact_email: string;        // RFC 5322 email, will receive actual email
 }

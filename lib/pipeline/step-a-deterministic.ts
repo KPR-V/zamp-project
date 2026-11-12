@@ -12,7 +12,7 @@ const REQUIRED_FIELDS: (keyof VendorPayload)[] = [
   'dba_name',
   'gstin',
   'bank_name',
-  'bank_account_name',
+  'bank_account_number',
   'state_code',
   'contact_email',
 ];
@@ -21,9 +21,15 @@ export function runStepA(vendor: VendorPayload): {
   step: PipelineStep;
   passed: boolean;
 } {
+  // Normalize bank_account_number from bank_account_name if needed
+  if (!vendor.bank_account_number && vendor.bank_account_name) {
+    vendor.bank_account_number = vendor.bank_account_name;
+  }
+
   // 1. Required field presence validation
   for (const field of REQUIRED_FIELDS) {
-    if (!vendor[field] || typeof vendor[field] !== 'string' || !vendor[field].trim()) {
+    const val = vendor[field];
+    if (!val || typeof val !== 'string' || !val.trim()) {
       return {
         step: {
           name: 'step_a',

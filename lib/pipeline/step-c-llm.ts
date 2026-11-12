@@ -16,7 +16,7 @@ function evaluateNameConsistencyHeuristic(vendor: VendorPayload): {
 } {
   const legal = vendor.legal_company_name.toLowerCase();
   const dba = vendor.dba_name.toLowerCase();
-  const bank = vendor.bank_account_name.toLowerCase();
+  const accountRef = vendor.bank_account_number || vendor.bank_account_name || '';
 
   // Extract acronym of legal name words (e.g. "Global Freight Solutions" -> "gfs")
   const stopWords = new Set(['pvt', 'ltd', 'private', 'limited', 'llp', 'inc', 'co', 'and', '&']);
@@ -27,28 +27,27 @@ function evaluateNameConsistencyHeuristic(vendor: VendorPayload): {
 
   const acronym = words.map((w) => w[0]).join('');
 
-  // Check if DBA or Bank name starts with or matches acronym
+  // Check if DBA starts with or matches acronym
   const dbaClean = dba.replace(/[^a-z0-9]/g, '');
-  const bankClean = bank.replace(/[^a-z0-9]/g, '');
 
   const acronymMatches =
     (acronym.length >= 2 && dbaClean.startsWith(acronym)) ||
-    (acronym.length >= 2 && bankClean.startsWith(acronym));
+    (acronym.length >= 2 && dbaClean.includes(acronym));
 
   // Check if words overlap significantly
-  const matchingWords = words.filter((w) => dba.includes(w) || bank.includes(w));
+  const matchingWords = words.filter((w) => dba.includes(w));
   const wordOverlap = matchingWords.length > 0;
 
   if (acronymMatches || wordOverlap) {
     return {
       isConsistent: true,
-      reasoning: `Trade name & acronym analysis: "${vendor.dba_name}" / "${vendor.bank_account_name}" matches corporate acronym ("${acronym.toUpperCase()}") or root entities of "${vendor.legal_company_name}". Plausible Indian commercial representation.`,
+      reasoning: `Trade name & acronym analysis: "${vendor.dba_name}" matches corporate acronym ("${acronym.toUpperCase()}") or root entities of "${vendor.legal_company_name}". Plausible Indian commercial representation for Account #${accountRef}.`,
     };
   }
 
   return {
     isConsistent: false,
-    reasoning: `No structural, lexical, or acronym correlation found between legal entity "${vendor.legal_company_name}" and bank account "${vendor.bank_account_name}".`,
+    reasoning: `No structural, lexical, or acronym correlation found between legal entity "${vendor.legal_company_name}" and trade name "${vendor.dba_name}".`,
   };
 }
 
@@ -62,11 +61,12 @@ export async function runStepC(vendor: VendorPayload): Promise<{
 
 Legal Company Name: "${vendor.legal_company_name}"
 Doing Business As (DBA) Name: "${vendor.dba_name}"
-Bank Account Name: "${vendor.bank_account_name}"
+Bank Name: "${vendor.bank_name}"
+Bank Account Number: "${vendor.bank_account_number || vendor.bank_account_name || ''}"
 State: "${vendor.state_code}"
 
 Your Task:
-Determine whether the Bank Account Name and DBA Name are commercially consistent with the Legal Company Name.
+Determine whether the Trade / DBA Name is commercially consistent with the Legal Company Name for bank account verification.
 Take into account:
 1. Acronyms (e.g. "Global Freight Solutions" -> "GFS").
 2. Standard Indian corporate entities (Pvt Ltd, LLP, Limited).

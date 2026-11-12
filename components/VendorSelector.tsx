@@ -170,13 +170,17 @@ export function VendorSelector({ onRun, disabled }: VendorSelectorProps) {
             </div>
             <div>
               <label className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                Bank Account Name
+                Bank Account Number
               </label>
               <input
                 type="text"
-                value={customPayload.bank_account_name}
-                onChange={(e) => handleFieldChange('bank_account_name', e.target.value)}
+                value={customPayload.bank_account_number || customPayload.bank_account_name || ''}
+                onChange={(e) => {
+                  handleFieldChange('bank_account_number', e.target.value);
+                  handleFieldChange('bank_account_name', e.target.value);
+                }}
                 disabled={disabled}
+                placeholder="e.g. 50100432109876"
                 className="w-full px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-900"
                 required
               />

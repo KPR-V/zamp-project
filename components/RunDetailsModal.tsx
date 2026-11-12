@@ -211,10 +211,10 @@ export function RunDetailsModal({ run, isOpen, onClose, onRunUpdated }: RunDetai
               </div>
               <div>
                 <span className="text-zinc-400 dark:text-zinc-500 block text-[10px] uppercase font-semibold">
-                  Bank Account Name
+                  Bank Account Number
                 </span>
-                <span className="text-zinc-900 dark:text-zinc-100 text-xs">
-                  {currentRun.vendor?.bank_account_name}
+                <span className="text-zinc-900 dark:text-zinc-100 text-xs font-mono">
+                  {currentRun.vendor?.bank_account_number || currentRun.vendor?.bank_account_name}
                 </span>
               </div>
               <div className="sm:col-span-2">

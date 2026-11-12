@@ -18,23 +18,37 @@ export function runStepB(vendor: VendorPayload): {
   score: number;
 } {
   const legal = vendor.legal_company_name.trim();
-  const bank = vendor.bank_account_name.trim();
+  const dba = vendor.dba_name.trim();
+  const bankAccount = (vendor.bank_account_name || vendor.bank_account_number || '').trim();
 
-  // Compare direct lowercased strings
-  const directScore = stringSimilarity.compareTwoStrings(
+  // Compare Legal Company Name vs DBA Trade Name
+  const dbaDirect = stringSimilarity.compareTwoStrings(
     legal.toLowerCase(),
-    bank.toLowerCase()
+    dba.toLowerCase()
   );
-
-  // Compare suffix-normalized strings
   const cleanedLegal = cleanCompanyName(legal);
-  const cleanedBank = cleanCompanyName(bank);
-  const normalizedScore = (cleanedLegal && cleanedBank)
-    ? stringSimilarity.compareTwoStrings(cleanedLegal, cleanedBank)
+  const cleanedDba = cleanCompanyName(dba);
+  const dbaNormalized = (cleanedLegal && cleanedDba)
+    ? stringSimilarity.compareTwoStrings(cleanedLegal, cleanedDba)
     : 0;
 
-  // Use the best matching representation
-  const score = Math.max(directScore, normalizedScore);
+  // Also compare against bank account name if provided as text (non-numeric)
+  const isNumericAccount = /^\d+$/.test(bankAccount.replace(/[\s-]/g, ''));
+  let bankScore = 0;
+  if (!isNumericAccount && bankAccount) {
+    const bankDirect = stringSimilarity.compareTwoStrings(
+      legal.toLowerCase(),
+      bankAccount.toLowerCase()
+    );
+    const cleanedBank = cleanCompanyName(bankAccount);
+    const bankNormalized = (cleanedLegal && cleanedBank)
+      ? stringSimilarity.compareTwoStrings(cleanedLegal, cleanedBank)
+      : 0;
+    bankScore = Math.max(bankDirect, bankNormalized);
+  }
+
+  // Use the highest confidence matching representation
+  const score = Math.max(dbaDirect, dbaNormalized, bankScore);
   const percentage = Math.round(score * 100);
   const autoApproved = score >= SIMILARITY_THRESHOLD;
 
@@ -44,8 +58,8 @@ export function runStepB(vendor: VendorPayload): {
       label: 'String Similarity Match',
       status: autoApproved ? 'passed' : 'failed',
       result: autoApproved
-        ? `${percentage}% match — Bank account name matches legal business name. Fast-path auto-approved (bypassing LLM).`
-        : `${percentage}% match — Bank account name differs from legal company name (<90% threshold). Escalating to NVIDIA NIM LLM.`,
+        ? `${percentage}% match — Business name matches legal registered entity. Fast-path auto-approved (bypassing LLM).`
+        : `${percentage}% match — Trade name (${vendor.dba_name}) differs from legal company name (<90% threshold). Escalating to NVIDIA NIM LLM.`,
       timestamp: new Date().toISOString(),
     },
     autoApproved,

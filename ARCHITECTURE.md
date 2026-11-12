@@ -118,7 +118,7 @@ function onFormSubmit(e) {
     dba_name: responses["DBA Name"] || "",
     gstin: gstin,
     bank_name: responses["Bank Name"] || "",
-    bank_account_name: responses["Bank Account Number"] || responses["Bank Account Name"] || "",
+    bank_account_number: responses["Bank Account Number"] || "",
     state_code: gstin.length >= 2 ? gstin.substring(0, 2) : "27",
     contact_email: responses["Notification Email"] || ""
   };
@@ -197,9 +197,10 @@ $$\text{GSTIN} = \underbrace{d_1 d_2}_{\text{State}} \, \underbrace{c_1 c_2 c_3 
 
 In commercial banking, legal entities rarely hold bank accounts with exact identical character casing, whitespace, or corporate designators as their tax forms. For example:
 - **Legal Name**: `Meridian Softech Private Limited`
-- **Bank Account Name**: `Meridian Softech Pvt Ltd`
+- **Trade / DBA Name**: `Meridian Softech`
+- **Bank Account Number**: `50100432109876`
 
-A naive strict equality check (`legal_company_name === bank_account_name`) fails in over **70% of compliant onboarding scenarios**. Conversely, relying on an LLM to evaluate trivial suffix variations wastes millions of tokens. Step B introduces **Corporate Suffix Normalization** combined with **Sørensen–Dice Bigram Analysis**.
+A naive strict equality check (`legal_company_name === dba_name`) fails in over **70% of compliant onboarding scenarios**. Conversely, relying on an LLM to evaluate trivial suffix variations wastes millions of tokens. Step B introduces **Corporate Suffix Normalization** combined with **Sørensen–Dice Bigram Analysis**.
 
 #### Suffix Normalization Transform
 Before string tokenization, an idempotent normalization function strips common corporate suffixes, legal entity markers, and punctuation:
@@ -219,7 +220,7 @@ function normalizeCompanyName(name: string): string {
 ```
 
 #### Mathematical Formulation of Dice's Coefficient
-Let $X$ and $Y$ represent the multi-sets of character **bigrams** (character 2-grams) extracted from the normalized legal company name $s_1$ and bank account name $s_2$. 
+Let $X$ and $Y$ represent the multi-sets of character **bigrams** (character 2-grams) extracted from the normalized legal company name $s_1$ and trade name $s_2$. 
 
 Dice's Coefficient $s(X, Y)$ is defined as twice the cardinality of the intersection divided by the sum of their individual cardinalities:
 
@@ -259,7 +260,8 @@ When $s \ge 0.90$, the system guarantees that the lexical divergence consists so
 
 When $s < 0.90$, a lexical discrepancy exists. Common legitimate business scenarios include:
 - **Legal Entity**: `Global Freight Solutions LLP`
-- **Bank Account / DBA**: `GFS Logistics`
+- **Trade Name (DBA)**: `GFS Logistics`
+- **Bank Account**: `ICICI Bank #001105002341`
 
 Dice's coefficient for `"global freight solutions"` vs. `"gfs logistics"` yields $s \approx 0.17$, correctly failing the deterministic threshold. However, this is **not a fraudulent application**; it is an established commercial acronym. 
 
@@ -270,12 +272,13 @@ The model is constrained via strict system prompting to output RFC 8259 JSON:
 
 ```
 You are an expert corporate compliance auditor specializing in Indian business entities and commercial banking.
-Your task is to determine whether a vendor's Doing Business As (DBA) or Bank Account Name is a commercially legitimate acronym, trade abbreviation, or operating division of their Legal Registered Name.
+Your task is to determine whether a vendor's Doing Business As (DBA) trade name is a commercially legitimate acronym, trade abbreviation, or operating division of their Legal Registered Name for bank account verification.
 
 Input Payload:
 - Legal Registered Name: {legal_company_name}
 - DBA Trade Name: {dba_name}
-- Bank Account Name: {bank_account_name}
+- Bank Name: {bank_name}
+- Bank Account Number: {bank_account_number}
 
 Evaluation Criteria:
 1. Acronym Formation: Check if DBA letters map to the initial phonemes or words of the legal name (e.g. "Global Freight Solutions" -> "GFS").
@@ -316,12 +319,12 @@ When a status is resolved as `Pending` or `Rejected`, Step D synthesizes an auto
 
 The following test matrix demonstrates how the platform routes divergent vendor submissions through the Cost-Efficiency Waterfall:
 
-| Scenario ID | Vendor Legal Entity | Trade Name (DBA) | Statutory GSTIN | Bank Account Name | Step A (Regex) | Step B (Dice) | Step C (LLM) | Final Status | Email Behavior | Total Tokens Consumed | Execution Latency |
+| Scenario ID | Vendor Legal Entity | Trade Name (DBA) | Statutory GSTIN | Bank Account Number | Step A (Regex) | Step B (Dice) | Step C (LLM) | Final Status | Email Behavior | Total Tokens Consumed | Execution Latency |
 |---|---|---|---|---|:---:|:---:|:---:|:---:|---|:---:|:---:|
-| **TC-01** (Happy Path) | *Meridian Softech Private Limited* | Meridian Softech | `27AABCM1234D1Z5` | *Meridian Softech Private Limited* | **PASS** | **1.00** $(\ge 0.90)$ | *Bypassed* | **Approved** | Skipped | **0** | **$4\text{ ms}$** |
-| **TC-02** (DBA Mismatch) | *Global Freight Solutions LLP* | GFS Logistics | `29AABCG5678E1Z3` | *GFS Logistics* | **PASS** | **0.17** $(< 0.90)$ | **PASS** (Conf: 85%) | **Pending** | Draft Held for Review | $\sim 380$ | $\sim 1.8\text{ s}$ |
-| **TC-03** (GSTIN Typo) | *Sunrise Imports and Exports Pvt Ltd* | Sunrise Imports | `07AABCS12345Z5` (14 chars) | *Sunrise Imports and Exports Pvt Ltd* | **FAIL** | *Bypassed* | *Bypassed* | **Rejected** | Instant Rejection Email | $\sim 190$ | $\sim 1.1\text{ s}$ |
-| **TC-04** (Impersonation) | *Apex Industrial Components Ltd* | Apex | `33AABCA9999F1Z2` | *QuickCash Liquidity LLC* | **PASS** | **0.00** $(< 0.90)$ | **FAIL** (Conf: 10%) | **Rejected** | Instant Discrepancy Email | $\sim 420$ | $\sim 2.1\text{ s}$ |
+| **TC-01** (Happy Path) | *Meridian Softech Private Limited* | Meridian Softech | `27AABCM1234D1Z5` | *#50100432109876* | **PASS** | **1.00** $(\ge 0.90)$ | *Bypassed* | **Approved** | Skipped | **0** | **$4\text{ ms}$** |
+| **TC-02** (DBA Mismatch) | *Global Freight Solutions LLP* | GFS Logistics | `29AABCG5678E1Z3` | *#001105002341* | **PASS** | **0.17** $(< 0.90)$ | **PASS** (Conf: 85%) | **Pending** | Draft Held for Review | $\sim 380$ | $\sim 1.8\text{ s}$ |
+| **TC-03** (GSTIN Typo) | *Sunrise Imports and Exports Pvt Ltd* | Sunrise Imports | `07AABCS12345Z5` (14 chars) | *#3089101002345* | **FAIL** | *Bypassed* | *Bypassed* | **Rejected** | Instant Rejection Email | $\sim 190$ | $\sim 1.1\text{ s}$ |
+| **TC-04** (Impersonation) | *Apex Industrial Components Ltd* | Apex | `33AABCA9999F1Z2` | *#987654321000* | **PASS** | **0.00** $(< 0.90)$ | **FAIL** (Conf: 10%) | **Rejected** | Instant Discrepancy Email | $\sim 420$ | $\sim 2.1\text{ s}$ |
 
 ---
 

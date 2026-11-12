@@ -39,6 +39,15 @@ async function persistState(runId: string, state: RunState): Promise<void> {
 export async function POST(request: NextRequest) {
   try {
     const vendor: VendorPayload = await request.json();
+
+    // Normalize bank_account_number and bank_account_name
+    if (!vendor.bank_account_number && vendor.bank_account_name) {
+      vendor.bank_account_number = vendor.bank_account_name;
+    }
+    if (!vendor.bank_account_name && vendor.bank_account_number) {
+      vendor.bank_account_name = vendor.bank_account_number;
+    }
+
     const run_id = randomUUID();
     const issuesList: string[] = [];
 
@@ -106,7 +115,7 @@ export async function POST(request: NextRequest) {
       name: 'step_b',
       label: 'String Similarity Match',
       status: 'running',
-      result: 'Comparing Bank Account Name against Legal Company Name...',
+      result: 'Comparing Trade / DBA Name against Legal Company Name...',
       timestamp: new Date().toISOString(),
     };
     state.steps.push(stepBRunning);
@@ -145,7 +154,7 @@ export async function POST(request: NextRequest) {
       // DBA matches or is a plausible abbreviation -> Needs Human Review
       state.status = 'Pending';
       issuesList.push(
-        `Bank account name matches commercial trade name (${vendor.dba_name}), but differs from registered legal name (${vendor.legal_company_name}). Manual compliance sign-off required.`
+        `Commercial trade name (${vendor.dba_name}) linked to Account #${vendor.bank_account_number || vendor.bank_account_name}, but differs from registered legal name (${vendor.legal_company_name}). Manual compliance sign-off required.`
       );
     } else {
       // LLM deemed names inconsistent or suspicious -> Reject
